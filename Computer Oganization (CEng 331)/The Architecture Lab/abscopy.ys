@@ -1,0 +1,222 @@
+#/* $begin abscopy-ys */
+##################################################################
+# abscopy.ys - copy the absolute values of a src block of n words to dst.
+# Return the sum of copied (absolute) values.
+#
+# Include your name and ID here.
+# Describe how and why you modified the baseline code.
+
+# name = Ozan Cinci
+# ID = 2448223
+
+# First of all I know I have to eliminate conditional jumps as much as possible.
+# Since it jumps first and then check if condition is satisfied, it would increase
+# CPE. To do so, I have implemented conditional move instead.
+
+#       mrmovq (%rdi), %r8  # r8 is val
+#       rrmovq %r8, %r9     # r9 is val
+#       isubq $0, %r9        # r9 is -r9
+#       cmovl %r8, %r9      # positive one is r9
+#       addq %r9, %rax      # sum += absval
+#       rmmovq %r9, (%rsi)  # copy dest
+
+# You can see this piece of code repeat itself. It first calculates val and negative
+# val. Then checks which one is bigger. It sets %r9 as bigger one, and finally set
+# destination as well as incrementing sum by %r9.
+
+# About unrolling:
+# I have been taught that unrolling improves performance while working loops. Initially
+# I have tried 16-element unrolling beacuse I think more the unrolling best the performance
+# but it exceeds the limitation set by TAs. Then I have implemented 8-element unrolling and
+# it works.
+
+# How unrolling works:
+# It initialy checks if there are less than 8 elements. If so directly go to remainder part.
+# If not, calculate 8 element by reapating piece of code. When there are less than 8 element
+# go to remainder.
+
+# How remainder part works:
+# We can crate any number in range [0,7] using binary system. I have basically implemented a
+# conditional jump logic using 1,2,4 element system. According to the remainder number, appropriate
+# jumps are made and function return sum.
+
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = n
+abscopy:
+##################################################################
+# You can modify this portion
+        xorq %rax, %rax          # sum = 0;
+        irmovq $8, %r12          # decrement by 8 constant
+        irmovq $64, %r14
+
+        rrmovq %rdx, %r11
+        irmovq  $7, %r10
+        subq  %r10, %r11        # calculate if len < 8
+        jle remainderPart       # if so, jump remainder part
+
+unroll8Element:
+        mrmovq (%rdi), %r8  # r8 is val
+        rrmovq %r8, %r9     # r9 is val
+        isubq $0, %r9        # r9 is -r9
+        cmovl %r8, %r9      # positive one is r9
+        addq %r9, %rax      # sum += absval
+        rmmovq %r9, (%rsi)  # copy dest
+
+        # do it 7 times more
+        mrmovq 8(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 8(%rsi)
+
+        mrmovq 16(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 16(%rsi)
+
+        mrmovq 24(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 24(%rsi)
+
+        mrmovq 32(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 32(%rsi)
+
+        mrmovq 40(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 40(%rsi)
+
+        mrmovq 48(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 48(%rsi)
+
+        mrmovq 56(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 56(%rsi)
+
+        # time to adjust addresses
+        addq %r14, %rdi
+        addq %r14, %rsi
+        subq %r12, %rdx
+
+        rrmovq %rdx, %r9
+        subq %r10, %r9
+        jg unroll8Element
+
+remainderPart:
+        # compare if greater or equal to 4
+        irmovq $4, %r9
+        rrmovq %rdx, %r8
+        subq %r9, %r8
+        jl remainder2
+        
+        mrmovq (%rdi), %r8  # r8 is val
+        rrmovq %r8, %r9     # r9 is val
+        isubq $0, %r9        # r9 is -r9
+        cmovl %r8, %r9      # positive one is r9
+        addq %r9, %rax      # sum += absval
+        rmmovq %r9, (%rsi)  # copy dest
+
+        # do it 3 times more
+        mrmovq 8(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 8(%rsi)
+
+        mrmovq 16(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 16(%rsi)
+
+        mrmovq 24(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 24(%rsi)
+
+        # time to adjust addresses
+        irmovq $32, %r14
+        addq %r14, %rdi
+        addq %r14, %rsi
+
+        irmovq $4, %r12
+        subq %r12, %rdx
+
+remainder2:
+        # compare if greater or equal to 2
+        irmovq $2, %r9
+        rrmovq %rdx, %r8
+        subq %r9, %r8
+        jl remainder1
+
+        mrmovq (%rdi), %r8  # r8 is val
+        rrmovq %r8, %r9     # r9 is val
+        isubq $0, %r9        # r9 is -r9
+        cmovl %r8, %r9      # positive one is r9
+        addq %r9, %rax      # sum += absval
+        rmmovq %r9, (%rsi)  # copy dest
+
+        # do it 1 times more
+        mrmovq 8(%rdi), %r8
+        rrmovq %r8, %r9
+        isubq $0, %r9
+        cmovl %r8, %r9
+        addq %r9, %rax
+        rmmovq %r9, 8(%rsi)
+
+        # time to adjust addresses
+        irmovq $16, %r14
+        addq %r14, %rdi
+        addq %r14, %rsi 
+        
+        irmovq $2, %r12
+        subq %r12, %rdx
+
+remainder1:
+        # compare if greater or equal to 1
+        irmovq $1, %r9
+        rrmovq %rdx, %r8
+        subq %r9, %r8
+        jl Done
+
+        mrmovq (%rdi), %r8  # r8 is val
+        rrmovq %r8, %r9     # r9 is val
+        isubq $0, %r9        # r9 is -r9
+        cmovl %r8, %r9      # positive one is r9
+        addq %r9, %rax      # sum += absval
+        rmmovq %r9, (%rsi)  # copy dest
+
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+        ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end abscopy-ys */

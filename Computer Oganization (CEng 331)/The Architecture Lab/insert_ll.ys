@@ -1,0 +1,89 @@
+# Ozan Cinci
+# 2448223
+
+
+# je -> ZF=1 jumps
+# jne -> ZF=0 jumps
+
+# Execution begins at address 0 
+.pos 0 
+	irmovq Stack, %rsp  	# Set up stack pointer  
+    irmovq ele0, %rdi       # set %rdi as ele0
+    irmovq array, %rsi      # set %rsi as something???
+    irmovq $56, %rdx         # set %rdx as value
+	call insert_ll		    # Execute kth_ll program
+	halt			        # Terminate program 
+
+insert_ll:
+    rrmovq %rsi, %r10
+    rmmovq %rdx, (%r10)    # set *array as initial value
+    andq %rdi, %rdi        # check if head is not null
+    je ifPart
+    
+    rrmovq %rdx, %r8       # set %r8 as value
+    mrmovq (%rdi), %r14 
+    subq %r14, %r8         # value - head->value
+    jge elsePart            
+    
+ifPart:
+    rrmovq %rsi, %r10
+    rmmovq %rdi, 8(%r10)  # do it -> *(array+1) = head;
+    rrmovq %rsi, %rax     # set %rax as array
+    ret                    # gonzo return boi
+elsePart:
+    rrmovq %rdi, %r10      # %r10 is temp -> struct list *temp = head;
+    jmp check
+whileLoop:
+    mrmovq 8(%r10), %r10  # temp = temp->next;
+check:
+    mrmovq 8(%r10), %r11  # r11 = temp->next
+    andq %r11, %r11       # condition (temp->next)
+    je loopOver
+    mrmovq (%r11), %r12   # r12 is temp->next->value
+    rrmovq %rdx, %r11     # r11 is the value now
+    subq %r12, %r11       # value - temp->next->value
+    jle loopOver
+    jmp whileLoop
+loopOver:
+    mrmovq 8(%r10), %r12  # r12 is temp->next
+    rrmovq %rsi, %r9
+    rmmovq %r12, 8(%r9) # do it -> *(array+1) = temp->next;
+
+    #temp->next = array;
+    rmmovq %rsi, 8(%r10)
+
+    rrmovq %rdi, %rax     # set rax as head
+    ret                   # gonzo return boi
+
+
+# absolutely positioned here to debug addresses more easily.
+.pos 0x200
+    ele0:
+        .quad 0x0005
+        .quad ele1
+    ele1:
+        .quad 0x000c
+        .quad ele2
+    ele2:
+        .quad 0x0010
+        .quad ele3
+    ele3:
+        .quad 0x001a
+        .quad ele4
+    ele4:
+        .quad 0x0030
+        .quad ele5
+    ele5:
+        .quad 0x0045
+        .quad ele6
+    ele6:
+        .quad 0x005e
+        .quad 0
+
+.pos 0x400
+    array:
+        .quad 0
+        .quad 0
+
+.pos 0x800
+    Stack:

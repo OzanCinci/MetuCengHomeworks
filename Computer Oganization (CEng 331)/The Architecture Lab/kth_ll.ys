@@ -1,0 +1,54 @@
+# Ozan Cinci
+# 2448223
+
+# Execution begins at address 0 
+.pos 0 
+	irmovq Stack, %rsp  	# Set up stack pointer  
+    irmovq ele0, %rdi       # set %rdi as ele0
+    irmovq $4, %rsi         # set %rsi as something???
+	call kth_ll		        # Execute kth_ll program
+	halt			        # Terminate program 
+
+kth_ll:
+    xorq %rax, %rax		# Set return value to 0
+    jmp check           # go to check to init loop
+loop:
+    irmovq $1, %r10
+    subq %r10, %rsi     # decrement k by one
+    andq %rsi, %rsi     # check if k is zero
+    je breakLoop        # if zero go to breakLoop
+    mrmovq 8(%rdi),%rdi # set head as head -> next
+check:
+    andq %rdi, %rdi     # check if zero (null)
+    jne loop            # go to loop if not zero (null)
+    ret                 # time to return boi
+breakLoop:
+    mrmovq (%rdi), %rax # set %rax as value of head
+    ret
+
+# absolutely positioned here to debug addresses more easily.
+.pos 0x200
+    ele0:
+        .quad 0x0005
+        .quad ele1
+    ele1:
+        .quad 0x000c
+        .quad ele2
+    ele2:
+        .quad 0x0010
+        .quad ele3
+    ele3:
+        .quad 0x001a
+        .quad ele4
+    ele4:
+        .quad 0x0030
+        .quad ele5
+    ele5:
+        .quad 0x0045
+        .quad ele6
+    ele6:
+        .quad 0x005e
+        .quad 0
+
+.pos 0x800
+    Stack:

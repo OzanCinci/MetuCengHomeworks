@@ -81,11 +81,9 @@ sem_t* semaphore_rows;
 void* multiplication_thread_func(void* arg) {
     // type adjustment
     mul_args* args = (mul_args*) arg; 
-    //printf("multiplication geldi-> row_index:(%d) \n",args->row_index);
     // wait for semaphore to complete
     int row_index = args->row_index;
     sem_wait(&semaphore_rows[row_index]);
-	//printf("row waiti gecti %d\n", row_index);
     // semaphore is useless now -> destroy it
     sem_destroy(&semaphore_rows[row_index]);
 
@@ -100,13 +98,10 @@ void* multiplication_thread_func(void* arg) {
     {
         // i = decides which column
         accumulator = 0;
-        //printf("column bekliyor:(%d) \n",i);
         monitor_wait(&condition_columns[i]);
-        //printf("column gecti: (%d) \n",i);
         monitor_signal(&condition_columns[i]);
         for(int j=0;j<element_count;j++)
         {
-            //printf("(%d)x(%d)\n", matrix1[row_index][j], matrix2[j][i]);
             accumulator += matrix1[row_index][j] * matrix2[j][i];
         }
         hw2_write_output(2,row_index+1,i+1,accumulator);
@@ -148,7 +143,6 @@ void* addition_thread_func(void* arg) {
     {
         sem_post(&semaphore_rows[row_index]);
     }
-
     // terminate the current thread
     pthread_exit(NULL);
 }
